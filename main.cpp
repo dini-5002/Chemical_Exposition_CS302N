@@ -1,7 +1,7 @@
 // =============================================================================
 //  ChemReact3D — OpenGL 3D Chemical Reaction Viewer
 //  Original base: im-Amitto/Opengl-3D-Chemical-Reaction-View
-//  Extended with lighting, fog, shells, arcball camera, auto-spin, reaction anim,
+//  Extended with lighting, fog, shells, arcball camera, auto-spin,
 //  labels, shadows, env map scaffold, and per-atom self-spin at fixed positions.
 // =============================================================================
 
@@ -50,17 +50,16 @@ bool  shellMode        = true;
 bool  autoSpinActive   = false;
 bool  envMapMode       = false;
 bool  labelMode        = true;
-bool  reactionAnim     = false;
 bool  shadowMode       = true;
 float autoSpinAngle    = 0.0f;
 float autoSpinSpeed    = 0.4f;
 
-// Per-atom spin: each sphere rotates about its own center (texture / highlight moves).
+// Per-atom spin
 bool  atomSelfSpinActive = true;
 float atomSpinAngle      = 0.0f;
 float atomSpinSpeed      = 2.8f;
 
-// Bohr-style orbiting electron dots (cartoon; not quantum orbitals). Toggle: B / menu.
+// Bohr-style orbiting electron dots
 bool  electronOrbitMode  = true;
 float electronOrbitPhase = 0.0f;
 
@@ -75,17 +74,11 @@ float panY      = 0.0f;
 int   lastMouseX = 0, lastMouseY = 0;
 bool  leftDown   = false, middleDown = false;
 
-// Perspective vs parallel (orthographic) projection
 bool  perspectiveProj  = true;
-float orthoHalfHeight  = 13.0f;   // vertical half-extent in world units (ortho mode)
+float orthoHalfHeight  = 13.0f;
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 4 — REACTION ANIMATION
-// ─────────────────────────────────────────────────────────────────────────────
-float reactionT = 0.0f;
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 5 — ELEMENT / ATOM DATA
+//  SECTION 4 — ELEMENT / ATOM DATA
 // ─────────────────────────────────────────────────────────────────────────────
 enum Symbol {
     INVALID=-1,
@@ -145,16 +138,15 @@ string Instruction =
     "  SPACE       : Auto-spin (whole scene)\n"
     "  O           : Atom self-spin (on each center)\n"
     "  N / P       : Next / Prev reaction\n"
-    "  R / r       : Reset / Animate reaction\n"
     "  F E V L H   : Fog / Shells / Env map / Labels / Shadows\n"
     "  B           : Orbiting electrons (Bohr-style dots)\n"
     "  WASD + Q/T  : Pan / zoom\n"
     "  Right-click : Menu";
-string projectInfo = "ChemReact3D — OpenGL Chemical Reaction Viewer";
+string projectInfo = "Chemical Expositon - OpenGL";
 string AtomInfo[120];
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 6 — ATOM / MOLECULE STRUCTURES
+//  SECTION 5 — ATOM / MOLECULE STRUCTURES
 // ─────────────────────────────────────────────────────────────────────────────
 struct AtomDetail {
     AtomDetail(Symbol s, string n, double r, double br)
@@ -179,14 +171,14 @@ struct Molecule {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 7 — rxn (intermediate + product)
+//  SECTION 6 — rxn (reactant A, reactant B, product only — no intermediate)
 // ─────────────────────────────────────────────────────────────────────────────
-struct rxn { string a, b, c, d, name; };
+struct rxn { string a, b, c, name; };
 rxn mole[5];
 int moleI = 0;
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 8 — PERIODIC TABLE
+//  SECTION 7 — PERIODIC TABLE
 // ─────────────────────────────────────────────────────────────────────────────
 struct PeriodicTable {
     PeriodicTable() {
@@ -275,7 +267,7 @@ struct PeriodicTable {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 9 — DATA PARSER
+//  SECTION 8 — DATA PARSER
 // ─────────────────────────────────────────────────────────────────────────────
 struct DataParser {
     DataParser(PeriodicTable t) : chem(t) {}
@@ -318,17 +310,17 @@ PeriodicTable chem;
 DataParser parser(chem);
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 10 — FLOOR
+//  SECTION 9 — FLOOR
 // ─────────────────────────────────────────────────────────────────────────────
 float fVert[4][3] = {
-    {-50.0f, 6.0f,-50.0f},
-    {+50.0f, 6.0f,-50.0f},
-    {+50.0f, 6.0f,+50.0f},
-    {-50.0f, 6.0f,+50.0f}
+    {-50.0f, -3.0f,-50.0f},
+    {+50.0f, -3.0f,-50.0f},
+    {+50.0f, -3.0f,+50.0f},
+    {-50.0f, -3.0f,+50.0f}
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 11 — TEXTURE LOADER
+//  SECTION 10 — TEXTURE LOADER
 // ─────────────────────────────────────────────────────────────────────────────
 GLuint loadTextureFromFile(const char* filename) {
     GLuint temp = 0;
@@ -359,39 +351,44 @@ GLuint loadTextureFromFile(const char* filename) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 12 — LIGHTING
+//  SECTION 11 — LIGHTING
 // ─────────────────────────────────────────────────────────────────────────────
 void setupLighting() {
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
-    glEnable(GL_LIGHT1);
+    glDisable(GL_LIGHT1);
+    //glEnable(GL_LIGHT1);
     glEnable(GL_NORMALIZE);
     glShadeModel(GL_SMOOTH);
 
-    // Scene-wide ambient (indirect / bounce light approximation)
-    GLfloat globalAmb[] = { 0.22f, 0.22f, 0.24f, 1.0f };
+    GLfloat globalAmb[] = { 0.50f, 0.50f, 0.50f, 1.0f };
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, globalAmb);
     glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
+   
+    GLfloat pos[]={0.0f,10.0f,0.0f,1.0f};
+   
 
-    // Key light — directional + small per-light ambient boost
-    GLfloat keyDir[]  = { 0.55f, 0.70f, 0.45f, 0.0f };
-    GLfloat keyAmb[]  = { 0.12f, 0.12f, 0.11f, 1.0f };
-    GLfloat keyDiff[] = { 0.92f, 0.88f, 0.80f, 1.0f };
-    GLfloat keySpec[] = { 1.0f, 1.0f, 0.98f, 1.0f };
-    glLightfv(GL_LIGHT0, GL_POSITION, keyDir);
+   //
+   GLfloat keyDir[]  = { 0.55f, 0.70f, 0.45f, 0.0f };
+   
+    GLfloat keyAmb[]  = { 0.40f, 0.35f, 0.10f, 1.0f };
+    //GLfloat keyDiff[] = { 1.0f, 0.5f, 0.5f, 1.0f };
+    GLfloat keyDiff[] = { 1.80f, 1.60f, 0.80f, 1.0f };
+    GLfloat keySpec[] = { 1.0f, 1.0f, 0.80f, 1.0f };
+   
+    glLightfv(GL_LIGHT0, GL_POSITION, pos);
     glLightfv(GL_LIGHT0, GL_AMBIENT,  keyAmb);
     glLightfv(GL_LIGHT0, GL_DIFFUSE,  keyDiff);
     glLightfv(GL_LIGHT0, GL_SPECULAR, keySpec);
 
-    // Fill light — cool, lower intensity (reduces harsh shadows)
-    GLfloat fillDir[]  = { -0.50f, -0.15f, -0.85f, 0.0f };
-    GLfloat fillAmb[]  = { 0.0f, 0.0f, 0.0f, 1.0f };
-    GLfloat fillDiff[] = { 0.20f, 0.22f, 0.32f, 1.0f };
-    GLfloat fillSpec[] = { 0.12f, 0.12f, 0.18f, 1.0f };
-    glLightfv(GL_LIGHT1, GL_POSITION, fillDir);
-    glLightfv(GL_LIGHT1, GL_AMBIENT,  fillAmb);
-    glLightfv(GL_LIGHT1, GL_DIFFUSE,  fillDiff);
-    glLightfv(GL_LIGHT1, GL_SPECULAR, fillSpec);
+    //GLfloat fillDir[]  = { 0.55f, 0.70f, 0.45f, 0.0f};
+    //GLfloat fillAmb[]  = { 0.12f, 0.12f, 0.11f, 1.0f };
+    //GLfloat fillDiff[] = { 0.92f, 0.88f, 0.80f, 1.0f };
+    //GLfloat fillSpec[] = { 1.0f, 1.0f, 0.98f, 1.0f };
+    //glLightfv(GL_LIGHT1, GL_POSITION, fillDir);
+    //glLightfv(GL_LIGHT1, GL_AMBIENT,  fillAmb);
+    //glLightfv(GL_LIGHT1, GL_DIFFUSE,  fillDiff);
+    //glLightfv(GL_LIGHT1, GL_SPECULAR, fillSpec);
 }
 
 void setAtomMaterial(float r, float g, float b, float alpha=1.0f) {
@@ -405,7 +402,7 @@ void setAtomMaterial(float r, float g, float b, float alpha=1.0f) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 13 — FOG
+//  SECTION 12 — FOG
 // ─────────────────────────────────────────────────────────────────────────────
 void setupFog() {
     if (!fogEnabled) { glDisable(GL_FOG); return; }
@@ -419,7 +416,7 @@ void setupFog() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 14 — CYLINDER
+//  SECTION 13 — CYLINDER
 // ─────────────────────────────────────────────────────────────────────────────
 void renderCylinder(float x1,float y1,float z1,
                     float x2,float y2,float z2,
@@ -445,7 +442,7 @@ void renderCylinder(float x1,float y1,float z1,
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 15 — TEXT HELPERS
+//  SECTION 14 — TEXT HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 void stringPrint(const string& s,int x,int y,float r,float g,float b) {
     void* font = GLUT_BITMAP_9_BY_15;
@@ -461,7 +458,7 @@ void stringPrinter(const string& s,int x,int y,float r,float g,float b) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 16 — BILLBOARD LABEL
+//  SECTION 15 — BILLBOARD LABEL
 // ─────────────────────────────────────────────────────────────────────────────
 void drawBillboardLabel(float wx,float wy,float wz,const string& text,
                         float r,float g,float b)
@@ -481,7 +478,7 @@ void drawBillboardLabel(float wx,float wy,float wz,const string& text,
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 17 — ATOM DRAWING
+//  SECTION 16 — ATOM DRAWING
 // ─────────────────────────────────────────────────────────────────────────────
 void drawAtom(float ox, float oy, float oz, float radius, int symInt,
               bool isSelected)
@@ -549,7 +546,6 @@ void drawAtom(float ox, float oy, float oz, float radius, int symInt,
     glPopMatrix();
 }
 
-// Small cyan spheres on tilted rings (symbolic valence-ish count, capped for speed).
 static int orbitElectronCount(int symInt) {
     if (symInt <= 0) return 1;
     return symInt < 8 ? symInt : 8;
@@ -597,22 +593,23 @@ void drawOrbitingElectrons(float cx, float cy, float cz, float atomR, int symInt
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 18 — PLANAR SHADOW
+//  SECTION 17 — PLANAR SHADOW
 // ─────────────────────────────────────────────────────────────────────────────
 void drawShadow(float ox, float oy, float oz, float radius) {
     if (!shadowMode || !floorMode) return;
-    float floorY = 6.0f;
-    float ly=8.0f, lx=5.0f, lz=6.0f;
-    if (fabs(oy - ly) < 1e-4f) return;
-    float t = (floorY - ly) / (oy - ly);
-    float sx = lx + t*(ox-lx);
-    float sz = lz + t*(oz-lz);
+    float floorY = -3.0f;
+   
+    //float ly=8.0f, lx=5.0f, lz=6.0f;
+    //if (fabs(oy - ly) < 1e-4f) return;
+    //float t = (floorY - ly) / (oy - ly);
+    //float sx = lx + t*(ox-lx);
+    //float sz = lz + t*(oz-lz);
 
     glPushMatrix();
-    glTranslatef(sx, floorY+0.01f, sz);
+    glTranslatef(ox, floorY+0.01f, oz);
     glScalef(1.0f, 0.001f, 1.0f);
     glDisable(GL_LIGHTING);
-    glColor4f(0.0f,0.0f,0.0f,0.35f);
+    glColor4f(0.0f,0.0f,0.0f,0.08f);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
     glutSolidSphere(radius*atomSize*1.1f,16,16);
@@ -622,60 +619,16 @@ void drawShadow(float ox, float oy, float oz, float radius) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 19 — ANIMATED POSITION
-// ─────────────────────────────────────────────────────────────────────────────
-void computeAnimatedPos(float bx, float by, float bz,
-                        const Molecule& interMol,
-                        const Molecule& prodMol,
-                        int tableIdx,
-                        float& ax, float& ay, float& az)
-{
-    ax = bx; ay = by; az = bz;
-
-    if (!reactionAnim || reactionT <= 0.0f) return;
-
-    if (reactionT <= 0.5f) {
-        float t1 = reactionT * 2.0f;
-        if (!interMol.atoms.empty()) {
-            int idx = tableIdx % (int)interMol.atoms.size();
-            ax = ax + t1 * ((float)interMol.atoms[idx].x - ax);
-            ay = ay + t1 * ((float)interMol.atoms[idx].y - ay);
-            az = az + t1 * ((float)interMol.atoms[idx].z - az);
-        }
-    } else {
-        float t2 = (reactionT - 0.5f) * 2.0f;
-        if (!interMol.atoms.empty()) {
-            int idx3 = tableIdx % (int)interMol.atoms.size();
-            ax = (float)interMol.atoms[idx3].x;
-            ay = (float)interMol.atoms[idx3].y;
-            az = (float)interMol.atoms[idx3].z;
-        }
-        if (!prodMol.atoms.empty()) {
-            int idx2 = tableIdx % (int)prodMol.atoms.size();
-            ax = ax + t2 * ((float)prodMol.atoms[idx2].x - ax);
-            ay = ay + t2 * ((float)prodMol.atoms[idx2].y - ay);
-            az = az + t2 * ((float)prodMol.atoms[idx2].z - az);
-        }
-    }
-}
-
-static int safeTableIndex(const Atom& atom) {
-    auto it1 = find_if(chem.table.cbegin(),chem.table.cend(),
-        [&atom](AtomDetail x){ return x.symbol==atom.symbol; });
-    if (it1 == chem.table.cend()) return 0;
-    return (int)(it1 - chem.table.cbegin());
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 20 — MAIN DRAW REACTION
+//  SECTION 18 — MAIN DRAW REACTION
+//  molecule[0] = reactant A,  molecule[1] = reactant B,  molecule[2] = product
 // ─────────────────────────────────────────────────────────────────────────────
 int selectedAtomSymbol = 0;
 
 void drawReaction() {
-    Molecule molecule[4] = {
+    // Only 3 molecules: reactant A, reactant B, product
+    Molecule molecule[3] = {
         parser.ParseData(mole[moleI].a),
         parser.ParseData(mole[moleI].b),
-        parser.ParseData(mole[moleI].d),
         parser.ParseData(mole[moleI].c)
     };
 
@@ -686,7 +639,9 @@ void drawReaction() {
         if (moleI>4 && presentation!=-2) { presentation=-2; glutPostRedisplay(); }
 
         if (pk==0) {
+           
             stringPrinter(projectInfo,400,450,0.0f,1.0f,1.0f);
+            return;
         }
 
         if (pk==-1 || pk>0) {
@@ -696,22 +651,9 @@ void drawReaction() {
                     auto it1 = find_if(chem.table.cbegin(),chem.table.cend(),
                         [&atom](AtomDetail x){ return x.symbol==atom.symbol; });
                     float r = (it1!=chem.table.cend()) ? (float)(*it1).radius : 0.5f;
-
-                    float bx = (float)atom.x-(10.0f*k);
-                    float by = (float)atom.y;
-                    float bz = (float)atom.z;
-                    float ax, ay, az;
-
-                    if (i < 2) {
-                        int tableIdx = safeTableIndex(atom);
-                        computeAnimatedPos(bx, by, bz,
-                                           molecule[3], molecule[2],
-                                           tableIdx,
-                                           ax, ay, az);
-                    } else {
-                        ax = bx; ay = by; az = bz;
-                    }
-
+                    float ax = (float)atom.x-(10.0f*k);
+                    float ay = (float)atom.y;
+                    float az = (float)atom.z;
                     drawShadow(ax, ay, az, r);
                 }
             }
@@ -722,20 +664,9 @@ void drawReaction() {
                         [&atom](AtomDetail x){ return x.symbol==atom.symbol; });
                     float radius = (it1!=chem.table.cend()) ? (float)(*it1).radius : 0.5f;
 
-                    float bx = (float)atom.x-(10.0f*k);
-                    float by = (float)atom.y;
-                    float bz = (float)atom.z;
-                    float ax, ay, az;
-
-                    if (i < 2) {
-                        int tableIdx = safeTableIndex(atom);
-                        computeAnimatedPos(bx, by, bz,
-                                           molecule[3], molecule[2],
-                                           tableIdx,
-                                           ax, ay, az);
-                    } else {
-                        ax = bx; ay = by; az = bz;
-                    }
+                    float ax = (float)atom.x-(10.0f*k);
+                    float ay = (float)atom.y;
+                    float az = (float)atom.z;
 
                     glStencilFunc(GL_ALWAYS, atom.symbol, -1);
 
@@ -765,20 +696,10 @@ void drawReaction() {
                 for (auto& bond : molecule[i].bonds) {
                     Atom a1 = molecule[i].atoms[get<0>(bond)];
                     Atom a2 = molecule[i].atoms[get<1>(bond)];
+                   
 
-                    float bx1 = (float)a1.x-(10.0f*k), by1 = (float)a1.y, bz1 = (float)a1.z;
-                    float bx2 = (float)a2.x-(10.0f*k), by2 = (float)a2.y, bz2 = (float)a2.z;
-                    float ax1, ay1, az1, ax2, ay2, az2;
-
-                    if (i < 2) {
-                        int t1 = safeTableIndex(a1);
-                        int t2 = safeTableIndex(a2);
-                        computeAnimatedPos(bx1, by1, bz1, molecule[3], molecule[2], t1, ax1, ay1, az1);
-                        computeAnimatedPos(bx2, by2, bz2, molecule[3], molecule[2], t2, ax2, ay2, az2);
-                    } else {
-                        ax1 = bx1; ay1 = by1; az1 = bz1;
-                        ax2 = bx2; ay2 = by2; az2 = bz2;
-                    }
+                    float ax1 = (float)a1.x-(10.0f*k), ay1 = (float)a1.y, az1 = (float)a1.z;
+                    float ax2 = (float)a2.x-(10.0f*k), ay2 = (float)a2.y, az2 = (float)a2.z;
 
                     GLUquadricObj* q = gluNewQuadric();
                     gluQuadricNormals(q,GLU_SMOOTH);
@@ -787,6 +708,7 @@ void drawReaction() {
                 }
             }
 
+            // Arrow between molecules
             if (i==0) {
                 glDisable(GL_LIGHTING);
                 glColor3f(0.0f,1.0f,0.0f);
@@ -813,9 +735,6 @@ void drawReaction() {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 21 — FLOOR
-// ─────────────────────────────────────────────────────────────────────────────
 void drawFloor() {
     if (!floorMode) return;
 
@@ -830,9 +749,6 @@ void drawFloor() {
     glEnable(GL_LIGHTING);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 22 — MENU
-// ─────────────────────────────────────────────────────────────────────────────
 void menu(int num) {
     if (num==0) { glutDestroyWindow(window); exit(0); }
     else value=num;
@@ -864,9 +780,7 @@ void createMenu() {
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 23 — DISPLAY
-// ─────────────────────────────────────────────────────────────────────────────
+
 void display() {
     switch(value) {
         case 20: atomMode=false;       value=0; createMenu(); break;
@@ -913,6 +827,22 @@ void display() {
     setupLighting();
     setupFog();
 
+
+    if (presentation == 0 && moleI == 0) {
+        glMatrixMode(GL_PROJECTION); glPushMatrix(); glLoadIdentity();
+        gluOrtho2D(0,1080,0,700);
+        glMatrixMode(GL_MODELVIEW);  glPushMatrix(); glLoadIdentity();
+        glDisable(GL_LIGHTING); glDisable(GL_FOG); glDisable(GL_DEPTH_TEST);
+        stringPrinter(projectInfo,400,450,0.0f,1.0f,1.0f);
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_LIGHTING);
+        if (fogEnabled) glEnable(GL_FOG);
+        glMatrixMode(GL_PROJECTION); glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);  glPopMatrix();
+        glutSwapBuffers();
+        return;
+    }
+
     glTranslatef(panX,panY,-camDist);
     glRotatef(camRotX, 1,0,0);
     glRotatef(camRotY, 0,1,0);
@@ -938,8 +868,6 @@ void display() {
         stringPrinter(projectInfo,10,660,0.0f,1.0f,1.0f);
         stringPrinter(Instruction,700,120,1.0f,1.0f,0.0f);
     }
-    if (presentation==0 && moleI==0)
-        stringPrinter(projectInfo,430,450,0.0f,1.0f,1.0f);
     if (presentation==-2)
         stringPrinter("Presentation finished.\nClick to exit.",430,450,0.0f,1.0f,1.0f);
 
@@ -952,14 +880,6 @@ void display() {
     if (shellMode)      status+="[SHELLS] ";
     if (envMapMode)     status+="[ENVMAP] ";
     if (shadowMode)     status+="[SHADOWS] ";
-    if (reactionAnim) {
-        if (reactionT <= 0.5f)
-            status+="[ANIM→INTERMEDIATE "+to_string((int)(reactionT*200))+"%) ";
-        else
-            status+="[ANIM→PRODUCT "+to_string((int)((reactionT-0.5f)*200))+"%) ";
-    } else if (reactionT >= 1.0f) {
-        status+="[ANIM DONE] ";
-    }
     stringPrinter(status,10,20,0.6f,0.6f,0.6f);
 
     glEnable(GL_DEPTH_TEST);
@@ -971,9 +891,7 @@ void display() {
     glutSwapBuffers();
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 24 — MOUSE
-// ─────────────────────────────────────────────────────────────────────────────
+
 void mouseFunc(int button, int state, int x, int y) {
 
     if (state==GLUT_DOWN && start==0) {
@@ -1022,7 +940,7 @@ void mouseMotion(int x, int y) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 25 — TIMER
+//  SECTION 23 — TIMER
 // ─────────────────────────────────────────────────────────────────────────────
 void timerCB(int) {
     if (autoSpinActive) {
@@ -1040,16 +958,11 @@ void timerCB(int) {
         if (electronOrbitPhase >= 360.0f) electronOrbitPhase -= 360.0f;
         glutPostRedisplay();
     }
-    if (reactionAnim) {
-        reactionT+=0.008f;
-        if (reactionT>=1.0f) { reactionT=1.0f; reactionAnim=false; }
-        glutPostRedisplay();
-    }
     glutTimerFunc(16,timerCB,0);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 26 — KEYBOARD
+//  SECTION 24 — KEYBOARD
 // ─────────────────────────────────────────────────────────────────────────────
 void keyboardFunc(unsigned char key, int x, int y) {
     switch (key) {
@@ -1060,8 +973,8 @@ void keyboardFunc(unsigned char key, int x, int y) {
         case 'q': camDist-=0.5f; if(camDist<1.0f)camDist=1.0f; break;
         case 't': camDist+=0.5f; break;
 
-        case 'n': moleI=(moleI+1)%5; reactionT=0.0f; reactionAnim=false; break;
-        case 'p': moleI=(moleI+4)%5; reactionT=0.0f; reactionAnim=false; break;
+        case 'n': moleI=(moleI+1)%5; break;
+        case 'p': moleI=(moleI+4)%5; break;
 
         case ' ': autoSpinActive=!autoSpinActive; createMenu(); break;
         case 'f': fogEnabled=!fogEnabled;   setupFog(); createMenu(); break;
@@ -1095,9 +1008,6 @@ void keyboardFunc(unsigned char key, int x, int y) {
             }
             break;
 
-        case 'r': reactionAnim=true; reactionT=0.0f; break;
-        case 'R': reactionAnim=false; reactionT=0.0f; glutPostRedisplay(); break;
-
         case '+': autoSpinSpeed+=0.1f; atomSpinSpeed+=0.2f; break;
         case '-': autoSpinSpeed=max(0.0f,autoSpinSpeed-0.1f);
                   atomSpinSpeed=max(0.0f,atomSpinSpeed-0.2f); break;
@@ -1118,7 +1028,7 @@ void specialKeyboard(int key, int, int) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 27 — RESHAPE / PROJECTION
+//  SECTION 25 — RESHAPE / PROJECTION
 // ─────────────────────────────────────────────────────────────────────────────
 void applyProjection(int w, int h) {
     if (h <= 0) h = 1;
@@ -1142,7 +1052,7 @@ void reshape(int w, int h) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 28 — ATOM INFO
+//  SECTION 26 — ATOM INFO
 // ─────────────────────────────────────────────────────────────────────────────
 void detail() {
     AtomInfo[1] ="Hydrogen:\n1. Colourless, odourless, tasteless gas.\n2. Lightest known gas.\n3. Very slightly soluble in water.";
@@ -1155,20 +1065,18 @@ void detail() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 29 — REACTIONS
-//  Intermediate paths use existing XYZ files as placeholders until you add
-//  dedicated intermediate geometries (see original comment block in your paste).
+//  SECTION 27 — REACTIONS  (3 files each: reactant A, reactant B, product)
 // ─────────────────────────────────────────────────────────────────────────────
 void getRxns() {
-    mole[0] = {"./XYZ/benzene.xyz",    "./XYZ/h2so4.xyz",          "./XYZ/benzene.xyz",   "./XYZ/benzenesulfonic_acid.xyz",    "Sulphonation Reaction"};
-    mole[1] = {"./XYZ/benzene.xyz",    "./XYZ/hydrogen.xyz",       "./XYZ/benzene.xyz",     "./XYZ/cyclohexane.xyz",             "Hydrogenation Reaction"};
-    mole[2] = {"./XYZ/benzene.xyz",    "./XYZ/bromine.xyz",        "./XYZ/benzene.xyz",     "./XYZ/bromobenzene.xyz",            "Bromination Reaction"};
-    mole[3] = {"./XYZ/c4h8.xyz",       "./XYZ/chcl3.xyz",          "./XYZ/c4h8.xyz",        "./XYZ/c4h6.xyz",                    "Simon-Craft Reaction"};
-    mole[4] = {"./XYZ/benzene.xyz",    "./XYZ/ch3cl.xyz",          "./XYZ/benzene.xyz",     "./XYZ/toulene.xyz",                 "Friedel-Craft Alkylation"};
+    mole[0] = {"./XYZ/benzene.xyz",  "./XYZ/h2so4.xyz",    "./XYZ/benzenesulfonic_acid.xyz", "Sulphonation Reaction"};
+    mole[1] = {"./XYZ/benzene.xyz",  "./XYZ/hydrogen.xyz", "./XYZ/cyclohexane.xyz",          "Hydrogenation Reaction"};
+    mole[2] = {"./XYZ/benzene.xyz",  "./XYZ/bromine.xyz",  "./XYZ/bromobenzene.xyz",         "Bromination Reaction"};
+    mole[3] = {"./XYZ/c4h8.xyz",     "./XYZ/chcl3.xyz",   "./XYZ/c4h6.xyz",                 "Simon-Craft Reaction"};
+    mole[4] = {"./XYZ/benzene.xyz",  "./XYZ/ch3cl.xyz",   "./XYZ/toulene.xyz",              "Friedel-Craft Alkylation"};
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  SECTION 30 — MAIN
+//  SECTION 28 — MAIN
 // ─────────────────────────────────────────────────────────────────────────────
 int main(int argc, char** argv) {
     getRxns();
