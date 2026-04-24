@@ -1,16 +1,32 @@
-# ChemReact3D — OpenGL 3D Chemical Reaction Viewer
+# ChemReact3D — 3D Chemical Reaction Exposition using OpenGL
 
-An interactive 3D visualiser for organic chemistry reactions built with OpenGL and freeglut.  
+An interactive 3D visualiser for organic chemistry reactions built with OpenGL and freeglut.
 Displays reactants and products using CPK-coloured atom spheres, bond cylinders, electron-orbit animations, and real-time lighting with floor shadows.
+
+---
+
+## Course
+
+**CS-302N: Computer Graphics and Visualization**
+
+---
+
+## Team Members
+
+| # | Name |
+|---|---|
+| 1 | Nandini Kumari  - 230001056 |
+| 2 | Shaik Sultana - 230001071 |
+| 3 | Tripti Anand - 230001078 |
 
 ---
 
 ## Acknowledgement
 
-This project was developed by using the base code from :contentReference[oaicite:0]{index=0} repository: **Opengl-3D-Chemical-Reaction-View** by **im-Amitto**.  
+This project builds upon the base code from the repository **Opengl-3D-Chemical-Reaction-View** by **im-Amitto**.
 Original source: https://github.com/im-Amitto/Opengl-3D-Chemical-Reaction-View
 
-We further extended and modified the original implementation by adding new features, improving visuals, enhancing interactivity, updating reactions, restructuring files, and refining the overall user experience.
+We extended and modified the original implementation by adding new visual features, improving rendering quality, enhancing interactivity, and refining the overall user experience.
 
 ---
 
@@ -43,9 +59,11 @@ Group_ID_ChemReact3D/
 │   ├── sulfur.bmp
 │   ├── chlorine.bmp
 │   └── bromine.bmp
-├── screenshots/             # Screenshots of the running application
+├── screenshots/
 ├── README.md
-└── run.sh                   # Linux build & run script
+└── run.sh
+```
+
 ---
 
 ## Dependencies
@@ -54,39 +72,28 @@ Group_ID_ChemReact3D/
 |---|---|---|
 | `g++` | C++ compiler | `sudo apt install build-essential` |
 | `freeglut3` | OpenGL windowing & input | `sudo apt install freeglut3-dev` |
-| `libGL` / `libGLU` | OpenGL / GLU rendering | included with freeglut3-dev |
+| `libGL` / `libGLU` | OpenGL / GLU rendering | included with `freeglut3-dev` |
 
 ---
 
 ## Installation (Linux)
 
-### 1. Install dependencies
 ```bash
 sudo apt update
 sudo apt install -y build-essential freeglut3-dev libgl1-mesa-dev libglu1-mesa-dev
 ```
 
-### 2. Clone / extract the project
 ```bash
 unzip Group_ID_ChemReact3D.zip
 cd Group_ID_ChemReact3D
 ```
 
-### 3. Build
 ```bash
-g++ ChemReact3D.cpp lib/RgbImage.cpp -o ChemReact3D \
-    -lGL -lGLU -lglut -lm -std=c++17
+g++ -w main.cpp  -lglut -lGL -lGLU -o ChemReact3D
 ```
 
-### 4. Run
 ```bash
 ./ChemReact3D
-```
-
-Or simply use the provided script:
-```bash
-chmod +x run.sh
-./run.sh
 ```
 
 ---
@@ -94,15 +101,17 @@ chmod +x run.sh
 ## Controls
 
 ### Mouse
+
 | Action | Result |
 |---|---|
 | Left-drag | Rotate scene |
 | Middle-drag | Pan scene |
 | Scroll wheel | Zoom in / out |
-| Left-click | Select atom / advance presentation |
+| Left-click | Select atom / exit title screen |
 | Right-click | Open context menu |
 
 ### Keyboard
+
 | Key | Action |
 |---|---|
 | `W A S D` | Pan up / left / down / right |
@@ -138,22 +147,18 @@ chmod +x run.sh
 ## Features
 
 - **CPK colouring** — standard element colour scheme for all atoms
-- **Bond detection** — automatic bond drawing based on atomic radii
-- **Textures** — BMP texture maps on atom spheres
-- **Electron shells** — translucent outer shell overlay
+- **Phong lighting** — smooth shading with ambient, diffuse, and specular highlights
+- **Bond detection** — automatic bond drawing based on atomic covalent radii
+- **Mipmapped textures** — BMP texture maps on atom spheres with trilinear filtering
 - **Bohr orbit animation** — animated electron dots orbiting nuclei
 - **Per-atom spin** — each atom rotates on its own axis
 - **Scene auto-spin** — whole reaction rotates continuously
+- **Electron shells** — translucent outer shell overlay
 - **Planar shadows** — light-projected shadows cast onto the floor
 - **Fog** — linear depth fog for depth cues
+- **Environment map** — sphere-map reflection mode
+- **Billboard atom labels** — element symbol displayed above each atom
 - **Stencil-based atom picking** — click any atom to read its element info
 - **Perspective / Orthographic** projection toggle
 - **Right-click menu** — full toggle menu for all features
-
----
-
-## Notes
-
-- XYZ files must use element symbol followed by X Y Z coordinates, one atom per line.
-- BMP textures must be in uncompressed 24-bit RGB format.
-- The application window is fixed at 1080 × 700 pixels.
+- **Status bar** — live HUD showing all currently active features
