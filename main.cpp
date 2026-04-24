@@ -1,3 +1,5 @@
+// Base reference:
+// https://github.com/im-Amitto/Opengl-3D-Chemical-Reaction-View 
 // =============================================================================
 //  ChemReact3D — OpenGL 3D Chemical Reaction Viewer
 // =============================================================================
