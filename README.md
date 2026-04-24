@@ -162,3 +162,13 @@ g++ -w main.cpp  -lglut -lGL -lGLU -o ChemReact3D
 - **Perspective / Orthographic** projection toggle
 - **Right-click menu** — full toggle menu for all features
 - **Status bar** — live HUD showing all currently active features
+## Screenshots
+
+### Main Reaction View
+![Main Scene](screenshots/sulphonation.png)
+
+### Interactive Menu & Controls
+![Menu](screenshots/menu.png)
+
+### Close-up Molecular Rendering
+![Closeup](screenshots/closeup.png)
