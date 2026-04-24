@@ -217,7 +217,7 @@ string Instruction =
     "  B           : Orbiting electrons (Bohr-style dots)\n"
     "  WASD + Q/T  : Pan / zoom\n"
     "  Right-click : Menu";
-string projectInfo = "Chemical Expositon - OpenGL";
+string projectInfo = "ChemReact3D — 3D Chemical Reaction Exposition using OpenGL";
 string AtomInfo[120];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1557,7 +1557,7 @@ int main(int argc, char **argv)
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH | GLUT_STENCIL | GLUT_MULTISAMPLE);
     glutInitWindowSize(1080, 700);
     glutInitWindowPosition(50, 50);
-    window = glutCreateWindow("ChemReact3D — OpenGL Chemical Reaction Viewer");
+    window = glutCreateWindow("ChemReact3D — 3D Chemical Reaction Exposition using OpenGL");
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
