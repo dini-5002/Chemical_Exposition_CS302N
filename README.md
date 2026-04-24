@@ -165,10 +165,10 @@ g++ -w main.cpp  -lglut -lGL -lGLU -o ChemReact3D
 ## Screenshots
 
 ### Main Reaction View
-![Main Scene](screenshots/sulphonation.png)
+![Main Scene](screenshots/ss2.png)
 
 ### Interactive Menu & Controls
-![Menu](screenshots/menu.png)
+![Menu](screenshots/ss1.png)
 
 ### Close-up Molecular Rendering
-![Closeup](screenshots/closeup.png)
+![Closeup](screenshots/ss4.png)
