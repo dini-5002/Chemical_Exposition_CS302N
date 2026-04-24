@@ -13,11 +13,11 @@ Displays reactants and products using CPK-coloured atom spheres, bond cylinders,
 
 ## Team Members
 
-| # | Name |
-|---|---|
-| 1 | Nandini Kumari  - 230001056 |
-| 2 | Shaik Sultana - 230001071 |
-| 3 | Tripti Anand - 230001078 |
+| # | Name | Roll Number |
+|---|---|---|
+| 1 | Nandini Kumari | 230001056 |
+| 2 | Shaik Sultana | 230001071 |
+| 3 | Tripti Anand | 230001078 |
 
 ---
 
