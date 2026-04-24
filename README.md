@@ -8,6 +8,7 @@ Displays reactants and products using CPK-coloured atom spheres, bond cylinders,
 ## Course
 
 **CS-302N: Computer Graphics and Visualization**
+
 **Course Instructor:** Prof. Somnath Dey  
 ---
 
