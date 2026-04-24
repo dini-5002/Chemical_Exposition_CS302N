@@ -84,8 +84,8 @@ sudo apt install -y build-essential freeglut3-dev libgl1-mesa-dev libglu1-mesa-d
 ```
 
 ```bash
-unzip Group_ID_ChemReact3D.zip
-cd Group_ID_ChemReact3D
+unzip G-5_ChemReact3D.zip
+cd G-5_ChemReact3D
 ```
 
 ```bash
